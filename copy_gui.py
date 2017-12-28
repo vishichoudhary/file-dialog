@@ -25,6 +25,9 @@ dirts_size=[]
 modify_time_dirts=[]
 
 def getFolderSize(folder):
+    """
+        This function takes too much time, will try to make it work fast
+    """
     total_size = os.path.getsize(folder)
     for item in os.listdir(folder):
         itempath = os.path.join(folder, item)
@@ -46,12 +49,14 @@ def file_size(file_path):
         return convert_bytes(file_info.st_size),(datetime.fromtimestamp(file_info.st_mtime)).date()
     else:
         file_info=os.stat(file_path)
-        return convert_bytes(getFolderSize(file_path)),(datetime.fromtimestamp(file_info.st_mtime)).date()
+        #return convert_bytes(getFolderSize(file_path)),(datetime.fromtimestamp(file_info.st_mtime)).date()
+        return "NA",(datetime.fromtimestamp(file_info.st_mtime)).date()
 
 for i in files:
     temp1,temp2=file_size(os.path.join(path,i))
     files_size.append(str(temp1))
     modify_time_files.append(str(temp2))
+
 for i in dirts:
     temp1,temp2=file_size(os.path.join(path,i))
     dirts_size.append(str(temp1))
@@ -71,19 +76,37 @@ class File_dialog(QDialog):
         self.initUI(wi,he)
 
     def initUI(self,wi,he):
+        self.moveBack = QPushButton(self)
+        self.moveBack.resize(35,30)
+        self.moveBack.setIcon(QIcon('moveBack.png'))
+        self.moveBack.setIconSize(QSize(35,30))
+        self.moveBack.move(.17*wi,10)
+        self.midbtn = QPushButton(" Cur",self)
+        self.midbtn.resize(60,30)
+        self.midbtn.move(.17*wi+35,10)
+        self.moveNext = QPushButton(self)
+        self.moveNext.resize(35,30)
+        self.moveNext.setIcon(QIcon('moveNext.png'))
+        self.moveNext.setIconSize(QSize(35,30))
+        self.moveNext.move(.17*wi+95,10)
+
+        self.checkBox = QCheckBox("Show hidden files/folders",self)
+        self.checkBox.resize(200,30)
+        self.checkBox.move(wi-500,he-130)
+
         self.btn = QPushButton("Select It",self)
         self.btn.resize(100,30)
-        self.btn.move(wi-100,10)
+        self.btn.move(wi-120,10)
 
         self.btn1 = QPushButton("Open Folder",self)
         self.btn1.resize(150,30)
         self.btn1.move(wi-300,10)
 
-        self.btn2 = QPushButton("second Button",self)
-        x=100
-        #print(wi-100,he-x)
-        self.btn2.move(wi-130,he-x)
-        self.btn2.clicked.connect(self.tati1)
+        self.cb = QComboBox(self)
+        self.cb.addItem("All Supported Fomarts")
+        self.cb.addItems(["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"])
+        self.cb.resize(200,30)
+        self.cb.move(wi-250,he-130)
 
         self.lineedit = QLineEdit("Search here",self)
         self.lineedit.resize(150,30)
@@ -99,24 +122,17 @@ class File_dialog(QDialog):
 
 
         lw=int(.15*wi)
-        #print(lw)
         l1w=wi-lw
-        #print(l1w)
         self.listWidget = QListWidget(self)
         self.listWidget.resize(lw,he-150)
         self.listWidget.move(0,0)
-        for i in dirts:
-            temp_item = QListWidgetItem(i)
-            temp_item.setBackground(QColor('#D2B48C'))
-            self.listWidget.addItem(temp_item)
-        self.listWidget.addItems(files)
 
-        newfont = QFont("Times", 8, QFont.Bold)
         self.table = QTableWidget(self)
         self.table.horizontalHeader().setVisible(False)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
-        self.table.setRowCount(len(dirts)+len(files)+2)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setRowCount(len(dirts)+len(files)+1)
         self.table.setColumnCount(3)
         cw=int(.7*l1w)
         cw1=int(.14*l1w)
@@ -155,11 +171,8 @@ class File_dialog(QDialog):
         self.table.move(lw,50)
         self.table.setShowGrid(False)
 
+        self.resize(wi,he)
         sys.exit(self.exec_())
-
-
-    def tati1(self):
-        print("helo")
 
     def search_update(self):
         print(self.lineedit.text())
