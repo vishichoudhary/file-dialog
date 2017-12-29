@@ -109,8 +109,8 @@ class File_dialog(QDialog):
         self.cb.move(wi-250,he-130)
 
         self.lineedit = QLineEdit("Search here",self)
-        self.lineedit.resize(150,30)
-        self.lineedit.move(wi-600,10)
+        self.lineedit.resize(250,30)
+        self.lineedit.move(wi-700,10)
         #self.lineedit.hide()
         self.helpbtn = QPushButton(self)
         self.helpbtn.resize(40,30)
