@@ -81,18 +81,16 @@ class File_dialog(QDialog):
         self.moveBack.setIcon(QIcon('moveBack.png'))
         self.moveBack.setIconSize(QSize(35,30))
         self.moveBack.move(.17*wi,10)
-        self.midbtn = QPushButton(" Cur",self)
-        self.midbtn.resize(60,30)
-        self.midbtn.move(.17*wi+35,10)
         self.moveNext = QPushButton(self)
         self.moveNext.resize(35,30)
         self.moveNext.setIcon(QIcon('moveNext.png'))
         self.moveNext.setIconSize(QSize(35,30))
-        self.moveNext.move(.17*wi+95,10)
+        self.moveNext.move(.17*wi+35,10)
 
         self.checkBox = QCheckBox("Show hidden files/folders",self)
         self.checkBox.resize(200,30)
         self.checkBox.move(wi-500,he-130)
+        self.checkBox.toggled.connect(lambda:self.show_hidden(self.checkBox))
 
         self.btn = QPushButton("Select It",self)
         self.btn.resize(100,30)
@@ -178,6 +176,9 @@ class File_dialog(QDialog):
         print(self.lineedit.text())
         self.lineedit.setText("")
 
+    def show_hidden(self,cb):
+        if cb.isChecked() == True:
+            print("Yups now show hidden files")
 
 if __name__ == '__main__':
 
