@@ -7,10 +7,6 @@ if os.name == 'nt':
     import win32api, win32con
 from datetime import datetime
 
-#formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
-#formats_lower=[]
-#for i in formats:formats_lower.append(i.lower())
-
 def Is_hidden(file_temp):
     if os.name== 'nt':
         attribute = win32api.GetFileAttributes(file_temp)
@@ -60,12 +56,10 @@ class File_dialog(QDialog):
         self.btn.resize(100,30)
         self.btn.move(wi-120,10)
         #self.btn.clicked.connect(self.select_it)
-        self.btn.clicked.connect(self.select_action)
 
         self.btn1 = QPushButton("Open Folder",self)
         self.btn1.resize(150,30)
         self.btn1.move(wi-300,10)
-        self.btn1.clicked.connect(self.open_action)
 
         self.lineedit = QLineEdit("Search here",self)
         self.lineedit.resize(250,30)
@@ -101,7 +95,8 @@ class File_dialog(QDialog):
         self.table.resize(self.l1w,he-200)
         self.table.move(self.lw,50)
         self.table.setShowGrid(False)
-        self.table.doubleClicked.connect(self.select_action)
+        #self.table.doubleClicked.connect(self.select_action)
+        self.table.doubleClicked.connect(self.default_setting)
 
         self.checkBox = QCheckBox("Show hidden files/folders",self)
         self.checkBox.resize(200,30)
@@ -115,6 +110,8 @@ class File_dialog(QDialog):
         self.cb.move(wi-250,he-130)
         self.cb.currentIndexChanged.connect(self.format_modifier)
 
+        self.btn.clicked.connect(lambda:self.select_action(True))
+        self.btn1.clicked.connect(lambda:self.open_action(True))
         self.resize(wi,he)
         sys.exit(self.exec_())
 
@@ -132,21 +129,31 @@ class File_dialog(QDialog):
 
         self.show_files(False)
 
-    def open_action(self):
+    def default_setting(self):
         indexes = self.table.selectionModel().selectedRows()
+        if len(indexes) == 1:
+            for index in (indexes):
+                if os.path.isdir(os.path.join(self.path,self.table.item(index.row(),0).text()[6:])):
+                    self.open_action(indexes)
+                else:
+                    self.select_action(indexes)
+        else :
+            self.select_action(indexes)
+
+    def open_action(self,indexes):
+        if indexes == True:
+            indexes = self.table.selectionModel().selectedRows()
         if len(indexes) == 1:
             for index in (indexes):
                 if os.path.isdir(os.path.join(self.path,self.table.item(index.row(),0).text()[6:])):
                     hola = (self.table.item(index.row(),0)).text()[6:]
                     self.path = os.path.join(self.path,hola)
                     self.show_files(False)
-        else:
-            print("do nothing")
 
 
-
-    def select_action(self):
-        indexes = self.table.selectionModel().selectedRows()
+    def select_action(self,indexes):
+        if indexes == True:
+            indexes = self.table.selectionModel().selectedRows()
         self.send_things = []
         for index in (indexes):
             hola = (self.table.item(index.row(),0)).text()[6:]
