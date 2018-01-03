@@ -29,8 +29,6 @@ class File_dialog(QDialog):
     """
     def __init__(self,wi,he,path,parent=None):
         self.path = path
-        self.stack = [self.path]
-        self.cur_pos = 0
         self.formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
         self.formats_lower=[]
         for i in self.formats:self.formats_lower.append(i.lower())
@@ -174,15 +172,17 @@ class File_dialog(QDialog):
                 self.recu_folder(lis,os.path.join(path,i))
 
     def moveBack_action(self):
-        if self.cur_pos != 0:
-                self.cur_pos=self.cur_pos-1
-                self.path=self.stack[self.cur_pos]
-                self.show_files(False)
+        indexes = self.table.selectionModel().selectedRows()
+        if len(indexes) == 1:
+            name = (self.table.item(indexes[0].row(),0).text()[6:])
+            self.path = (os.path.abspath(os.path.join(name, os.pardir)))
+            self.show_files(False)
 
     def moveNext_action(self):
-        if  not self.cur_pos == len(self.stack)-1:
-                self.cur_pos=self.cur_pos+1
-                self.path=self.stack[self.cur_pos]
+        indexes = self.table.selectionModel().selectedRows()
+        if len(indexes) == 1:
+            if os.path.isdir(os.path.join(self.path,self.table.item(indexes[0].row(),0).text()[6:])):
+                self.path = os.path.join(self.path,self.table.item(indexes[0].row(),0).text()[6:])
                 self.show_files(False)
 
     def show_files(self,hidden):
@@ -214,9 +214,6 @@ class File_dialog(QDialog):
             self.table.setItem(pos,2,QTableWidgetItem(self.files_modi_time[j]))
             self.table.setCellWidget(pos, 0, ImgWidget1("music.png"))
             pos,j=pos+1,j+1
-
-    def select_it(self):
-        "need much to do"
 
     def search_update(self):
         print(self.lineedit.text())
