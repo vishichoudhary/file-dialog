@@ -3,9 +3,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 import os,sys
-from datetime import datetime
 if os.name == 'nt':
     import win32api, win32con
+from datetime import datetime
 
 formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
 formats_lower=[]
