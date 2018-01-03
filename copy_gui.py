@@ -55,11 +55,12 @@ class File_dialog(QDialog):
         self.btn = QPushButton("Select It",self)
         self.btn.resize(100,30)
         self.btn.move(wi-120,10)
-        #self.btn.clicked.connect(self.select_it)
+        self.btn.clicked.connect(lambda:self.select_action(True))
 
         self.btn1 = QPushButton("Open Folder",self)
         self.btn1.resize(150,30)
         self.btn1.move(wi-300,10)
+        self.btn1.clicked.connect(lambda:self.open_action(True))
 
         self.lineedit = QLineEdit("Search here",self)
         self.lineedit.resize(250,30)
@@ -95,7 +96,6 @@ class File_dialog(QDialog):
         self.table.resize(self.l1w,he-200)
         self.table.move(self.lw,50)
         self.table.setShowGrid(False)
-        #self.table.doubleClicked.connect(self.select_action)
         self.table.doubleClicked.connect(self.default_setting)
 
         self.checkBox = QCheckBox("Show hidden files/folders",self)
@@ -110,8 +110,6 @@ class File_dialog(QDialog):
         self.cb.move(wi-250,he-130)
         self.cb.currentIndexChanged.connect(self.format_modifier)
 
-        self.btn.clicked.connect(lambda:self.select_action(True))
-        self.btn1.clicked.connect(lambda:self.open_action(True))
         self.resize(wi,he)
         sys.exit(self.exec_())
 
@@ -150,7 +148,6 @@ class File_dialog(QDialog):
                     self.path = os.path.join(self.path,hola)
                     self.show_files(False)
 
-
     def select_action(self,indexes):
         if indexes == True:
             indexes = self.table.selectionModel().selectedRows()
@@ -161,7 +158,9 @@ class File_dialog(QDialog):
                 self.recu_folder(self.send_things,os.path.join(self.path,hola))
             else:
                 self.send_things.append(os.path.join(self.path,hola))
-        print(self.send_things)
+        for  i in self.send_things:
+            print(i)
+        #print(self.send_things)
         sys.exit()
 
     def recu_folder(self,lis,path):
