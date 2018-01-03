@@ -7,9 +7,9 @@ if os.name == 'nt':
     import win32api, win32con
 from datetime import datetime
 
-formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
-formats_lower=[]
-for i in formats:formats_lower.append(i.lower())
+#formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
+#formats_lower=[]
+#for i in formats:formats_lower.append(i.lower())
 
 def Is_hidden(file_temp):
     if os.name== 'nt':
@@ -17,7 +17,6 @@ def Is_hidden(file_temp):
         return attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
     else:
         return file_temp.startswith('.')
-
 
 class ImgWidget1(QLabel):
     """
@@ -36,6 +35,10 @@ class File_dialog(QDialog):
         self.path = path
         self.stack = [self.path]
         self.cur_pos = 0
+        self.formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
+        self.formats_lower=[]
+        for i in self.formats:self.formats_lower.append(i.lower())
+        self.formats_show=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
         super(File_dialog,self).__init__(parent)
         self.initUI(wi,he)
 
@@ -62,6 +65,7 @@ class File_dialog(QDialog):
         self.btn1 = QPushButton("Open Folder",self)
         self.btn1.resize(150,30)
         self.btn1.move(wi-300,10)
+        self.btn1.clicked.connect(self.open_action)
 
         self.lineedit = QLineEdit("Search here",self)
         self.lineedit.resize(250,30)
@@ -82,11 +86,11 @@ class File_dialog(QDialog):
         self.listWidget.move(0,0)
 
         self.table = QTableWidget(self)
-        self.table.horizontalHeader().setVisible(False)
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(("Name;Size;Modified").split(";"))
         self.table.verticalHeader().setVisible(False)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setColumnCount(3)
         cw=int(.7*self.l1w)
         cw1=int(.14*self.l1w)
         cw2=int(.14*self.l1w)
@@ -105,27 +109,63 @@ class File_dialog(QDialog):
         self.checkBox.toggled.connect(lambda:self.show_hidden(self.checkBox))
 
         self.cb = QComboBox(self)
-        self.cb.addItem("All Supported Fomarts")
-        self.cb.addItems(formats)
+        self.cb.addItem("All Supported Formats")
+        self.cb.addItems(self.formats_show)
         self.cb.resize(200,30)
         self.cb.move(wi-250,he-130)
+        self.cb.currentIndexChanged.connect(self.format_modifier)
 
         self.resize(wi,he)
         sys.exit(self.exec_())
 
+    def format_modifier(self,i):
+
+        self.formats.clear()
+        self.formats_lower.clear()
+        if not self.cb.itemText(i) == "All Supported Formats":
+            self.formats = [self.cb.itemText(i)]
+        else:
+            print("hello")
+            self.formats=["MP3","FLAC","OGG","M4A","WMA","WAV","MP4","AAC","flv"]
+
+        for i in self.formats:self.formats_lower.append(i.lower())
+
+        self.show_files(False)
+
+    def open_action(self):
+        indexes = self.table.selectionModel().selectedRows()
+        if len(indexes) == 1:
+            for index in (indexes):
+                if os.path.isdir(os.path.join(self.path,self.table.item(index.row(),0).text()[6:])):
+                    hola = (self.table.item(index.row(),0)).text()[6:]
+                    self.path = os.path.join(self.path,hola)
+                    self.show_files(False)
+        else:
+            print("do nothing")
+
+
+
     def select_action(self):
         indexes = self.table.selectionModel().selectedRows()
+        self.send_things = []
         for index in (indexes):
-            value=(self.table.item(self.table.currentRow(),0).text())[6:]
-            #value=(self.table.item(self.table.currentRows(),0).text())[6:]
-            print(value)
-            if os.path.isdir(os.path.join(self.path,value)) == True:
-                self.path=os.path.join(self.path,value)
-                self.stack.append(self.path)
-                #print(self.stack)
-                self.cur_pos=self.cur_pos+1
-                self.show_files(False)
-                #self.btn.setEnabled(False)
+            hola = (self.table.item(index.row(),0)).text()[6:]
+            if os.path.isdir(os.path.join(self.path,hola)):
+                self.recu_folder(self.send_things,os.path.join(self.path,hola))
+            else:
+                self.send_things.append(os.path.join(self.path,hola))
+        print(self.send_things)
+        sys.exit()
+
+    def recu_folder(self,lis,path):
+       temp = os.listdir(path)
+       for i in temp:
+            if os.path.isfile(os.path.join(path,i)):
+                for j in self.formats_lower:
+                    if i.endswith('.'+j):
+                        lis.append(os.path.join(path,i))
+            else:
+                self.recu_folder(lis,os.path.join(path,i))
 
     def moveBack_action(self):
         if self.cur_pos != 0:
@@ -140,36 +180,37 @@ class File_dialog(QDialog):
                 self.show_files(False)
 
     def show_files(self,hidden):
+        self.hidden_items = 0
         self.files_to_show()
-        self.table.setRowCount(len(self.dirs)+len(self.files)+1)
-        self.table.setItem(0,0,QTableWidgetItem("                                   Name"))
-        self.table.setItem(0,1,QTableWidgetItem("      Size"))
-        self.table.setItem(0,2,QTableWidgetItem("      Modified"))
-        start,pos,j=1,1,1
-        while start <= len(self.dirs):
+        if hidden == False :
+            self.table.setRowCount(len(self.dirs)+len(self.files)-self.hidden_items)
+        else:
+            self.table.setRowCount(len(self.dirs)+len(self.files))
+        start,pos,j=0,0,0
+        while start < len(self.dirs):
             if hidden == False :
-                if Is_hidden(self.dirs[start-1]) == True:
+                if Is_hidden(self.dirs[start]) == True:
                     start=start+1
                     continue
-            self.table.setItem(pos,0,QTableWidgetItem("      "+self.dirs[start-1]))
-            self.table.setItem(pos,1,QTableWidgetItem("      "+self.dirs_size[start-1]))
-            self.table.setItem(pos,2,QTableWidgetItem("      "+self.dirs_modi_time[start-1]))
+            self.table.setItem(pos,0,QTableWidgetItem("      "+self.dirs[start]))
+            self.table.setItem(pos,1,QTableWidgetItem(self.dirs_size[start]))
+            self.table.setItem(pos,2,QTableWidgetItem(self.dirs_modi_time[start]))
             self.table.setCellWidget(pos, 0, ImgWidget1("folder.png"))
             pos,start=pos+1,start+1
 
-        while j <= len(self.files):
+        while j < len(self.files):
             if hidden == False :
-                if Is_hidden(self.files[j-1]) == True:
+                if Is_hidden(self.files[j]) == True:
                     j=j+1
                     continue
-            self.table.setItem(pos,0,QTableWidgetItem("      "+self.files[j-1]))
-            self.table.setItem(pos,1,QTableWidgetItem("      "+self.files_size[j-1]))
-            self.table.setItem(pos,2,QTableWidgetItem("      "+self.files_modi_time[j-1]))
+            self.table.setItem(pos,0,QTableWidgetItem("      "+self.files[j]))
+            self.table.setItem(pos,1,QTableWidgetItem(self.files_size[j]))
+            self.table.setItem(pos,2,QTableWidgetItem(self.files_modi_time[j]))
             self.table.setCellWidget(pos, 0, ImgWidget1("music.png"))
             pos,j=pos+1,j+1
 
     def select_it(self):
-        print("hello im done")
+        "need much to do"
 
     def search_update(self):
         print(self.lineedit.text())
@@ -188,7 +229,6 @@ class File_dialog(QDialog):
         self.dirs = []
         self.dirs_size = []
         self.dirs_modi_time = []
-
         def converter(num):
             for x in ['bytes', 'KB', 'MB', 'GB', 'TB']:
                 if num < 1024.0:
@@ -197,13 +237,20 @@ class File_dialog(QDialog):
 
         for i in os.listdir(self.path):
             file_info = os.stat(os.path.join(self.path,i))
+            if Is_hidden(i):
+                if os.path.isfile(os.path.join(self.path,i)):
+                    for j in self.formats_lower:
+                        if i.endswith('.'+j):
+                            self.hidden_items=self.hidden_items+1
+                else:
+                    self.hidden_items=self.hidden_items+1
             date_= str((datetime.fromtimestamp(file_info.st_mtime)).date())
             if os.path.isdir(os.path.join(self.path,i)):
                 self.dirs.append(i)
                 self.dirs_size.append("NA")
                 self.dirs_modi_time.append(date_)
             else:
-                for j in formats_lower:
+                for j in self.formats_lower:
                     if i.endswith('.'+j) == True:
                         self.files.append(i)
                         self.files_size.append(converter(file_info.st_size))
