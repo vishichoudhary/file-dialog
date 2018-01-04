@@ -50,15 +50,15 @@ class File_dialog(QDialog):
         self.moveNext.move(.17*wi+35,10)
         self.moveNext.clicked.connect(self.moveNext_action)
 
-        self.btn = QPushButton("Select It",self)
-        self.btn.resize(100,30)
-        self.btn.move(wi-120,10)
-        self.btn.clicked.connect(lambda:self.select_action(True))
+        self.selectBtn = QPushButton("Select It",self)
+        self.selectBtn.resize(100,30)
+        self.selectBtn.move(wi-120,10)
+        self.selectBtn.clicked.connect(lambda:self.select_action(True))
 
-        self.btn1 = QPushButton("Open Folder",self)
-        self.btn1.resize(150,30)
-        self.btn1.move(wi-300,10)
-        self.btn1.clicked.connect(lambda:self.open_action(True))
+        self.selectBtn1 = QPushButton("Open Folder",self)
+        self.selectBtn1.resize(150,30)
+        self.selectBtn1.move(wi-300,10)
+        self.selectBtn1.clicked.connect(lambda:self.open_action(True))
 
         self.lineedit = QLineEdit("Search here",self)
         self.lineedit.resize(250,30)
@@ -128,11 +128,11 @@ class File_dialog(QDialog):
     def default_setting(self):
         indexes = self.table.selectionModel().selectedRows()
         if len(indexes) == 1:
-            for index in (indexes):
-                if os.path.isdir(os.path.join(self.path,self.table.item(index.row(),0).text()[6:])):
-                    self.open_action(indexes)
-                else:
-                    self.select_action(indexes)
+            #for index in (indexes):
+            if os.path.isdir(os.path.join(self.path,self.table.item(indexes[0].row(),0).text()[6:])):
+                self.open_action(indexes)
+            else:
+                self.select_action(indexes)
         else :
             self.select_action(indexes)
 
@@ -140,11 +140,10 @@ class File_dialog(QDialog):
         if indexes == True:
             indexes = self.table.selectionModel().selectedRows()
         if len(indexes) == 1:
-            for index in (indexes):
-                if os.path.isdir(os.path.join(self.path,self.table.item(index.row(),0).text()[6:])):
-                    hola = (self.table.item(index.row(),0)).text()[6:]
-                    self.path = os.path.join(self.path,hola)
-                    self.show_files(False)
+            if os.path.isdir(os.path.join(self.path,self.table.item(indexes[0].row(),0).text()[6:])):
+                hola = (self.table.item(indexes[0].row(),0)).text()[6:]
+                self.path = os.path.join(self.path,hola)
+                self.show_files(False)
 
     def select_action(self,indexes):
         if indexes == True:
@@ -172,17 +171,23 @@ class File_dialog(QDialog):
                 self.recu_folder(lis,os.path.join(path,i))
 
     def moveBack_action(self):
-        indexes = self.table.selectionModel().selectedRows()
-        if len(indexes) == 1:
-            name = (self.table.item(indexes[0].row(),0).text()[6:])
-            self.path = (os.path.abspath(os.path.join(name, os.pardir)))
-            self.show_files(False)
+        self.path = os.path.dirname((os.path.abspath(self.path)))
+        self.show_files(False)
 
     def moveNext_action(self):
         indexes = self.table.selectionModel().selectedRows()
         if len(indexes) == 1:
             if os.path.isdir(os.path.join(self.path,self.table.item(indexes[0].row(),0).text()[6:])):
                 self.path = os.path.join(self.path,self.table.item(indexes[0].row(),0).text()[6:])
+                self.show_files(False)
+        if len(indexes) == 0:
+            temp_name = []
+            for i in os.listdir(self.path) :
+                if os.path.isdir(os.path.join(self.path,i)):
+                    temp_name.append(i)
+            if len(temp_name) >0:
+                #sort(temp_name)
+                self.path=os.path.join(self.path,temp_name[0])
                 self.show_files(False)
 
     def show_files(self,hidden):
